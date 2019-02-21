@@ -13,4 +13,8 @@ public abstract class WechatInterface {
 
     public abstract void autoRepeat();
 
+    public abstract void addFriends();
+
+    public abstract void addFriendsToUI();
+
 }

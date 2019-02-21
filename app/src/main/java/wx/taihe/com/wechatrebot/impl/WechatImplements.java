@@ -1,9 +1,16 @@
 package wx.taihe.com.wechatrebot.impl;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+
+import org.json.JSONObject;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 
 import de.robv.android.xposed.XC_MethodHook;
@@ -31,7 +38,7 @@ public class WechatImplements extends WechatInterface{
                 super.beforeHookedMethod(param);
                 final String userAccount = param.args[0].toString();
                 final String userMessage = param.args[1].toString();
-                Log.i("Wechat Rebot Log","收到微信消息!发件人:"+userAccount+",消息:"+userMessage);
+                Log.i("Wechat Rebot Log","收到微信消息!发件人Mac:"+userAccount+",消息:"+userMessage);
 
                 if(userMessage.contains("@帅逼")) {
 
@@ -87,22 +94,51 @@ public class WechatImplements extends WechatInterface{
 
             }
         });
-        Class<?> ajClass = XposedHelpers.findClass("com.tencent.mm.sdk.platformtools.aj",classLoader);
-        Class<?> hClass = XposedHelpers.findClass("android.os.Message",classLoader);
-        XposedHelpers.findAndHookConstructor(ajClass,hClass,new XC_MethodHook() {
+    }
+
+    @Override
+    public void addFriends() {
+        //加好友操作,获取输入参数测试
+        Class<?> FTSAfu = XposedHelpers.findClass("com.tencent.mm.plugin.fts.ui.FTSMainUI$6",classLoader);
+        //Class<?> FTSmu = XposedHelpers.findClass("",classLoader);
+        XposedHelpers.findAndHookMethod(FTSAfu,"onSceneEnd",int.class,int.class,String.class,XposedHelpers.findClass("com.tencent.mm.ah.m",classLoader),new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                Log.i("Dump Stack: ", "---------------start----------------");
-                Throwable ex = new Throwable();
-                StackTraceElement[] stackElements = ex.getStackTrace();
-                if (stackElements != null) {
-                    for (int i = 0; i < stackElements.length; i++) {
-                        Log.i("Dump Stack"+i+": ", stackElements[i].getClassName()+"----"+stackElements[i].getFileName()+"----" + stackElements[i].getLineNumber()+"----" +stackElements[i].getMethodName());
-                    }
-                }
-                Log.i("Dump Stack: ", "---------------over----------------");
+                //此处注释，先获取到bnm实例化的bhH，需要获取tcA的值是多少，get方法获取mVar的bhH方法的返回值
+                //源代码bnm bhH = ((com.tencent.mm.plugin.messenger.a.f) mVar).bhH();
+                //            if (bhH.tcA > 0) {
+                Log.i("Wechat bhH.tcA 的值为",""+XposedHelpers.findField(XposedHelpers.findClass("com.tencent.mm.protocal.c.bnm",classLoader),"tcA").get(XposedHelpers.callMethod((param.args[3]),"bhH")));
+
+                Log.i("Wechat bhH.tGq 的值为",""+XposedHelpers.findField(XposedHelpers.findClass("com.tencent.mm.protocal.c.bnm",classLoader),"tGq").get(XposedHelpers.callMethod((param.args[3]),"bhH")));
+
+
+                //BG为搜索的值
+                Log.i("Wechat BG 的值为",""+XposedHelpers.findField(XposedHelpers.findClass("com.tencent.mm.plugin.fts.ui.FTSMainUI$6",classLoader),"BG").get(param.thisObject).toString());
+
+
+                Log.i("Wechat Rebot Log before","输入搜索的文本为:"+ param.args[0]+"   "+param.args[1]+"   "+param.args[2]);
+
+
             }
 
         });
     }
+
+    @Override
+    public void addFriendsToUI() {
+        //针对搜索结果的返回值
+        Class<?> bbsr = XposedHelpers.findClass(" com.tencent.mm.br.d",classLoader);
+        XposedHelpers.findAndHookMethod(bbsr,"b",Context.class,String.class,String.class,Intent.class,Bundle.class,new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+                Intent intent = (Intent)param.args[3];
+                Log.i("mm.br.d$b方法的参数",""+param.args[1].toString()+"   "+param.args[2].toString());
+                Bundle bundle = intent.getExtras();
+                for(String key : bundle.keySet()){
+                    Log.i("intent 所有key以及值",key+"   "+bundle.get(key));
+                }
+            }
+        });
+    }
+
 }
